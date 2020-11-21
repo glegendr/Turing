@@ -7,7 +7,7 @@ import JsonReader
 
 main :: IO ()
 main = do
-    turing <- readJson "json.json" "111-11="
+    turing <- readJson "merde.json" "111-11="
     loopToFinish turing
 
 loopToFinish :: Turing -> IO ()

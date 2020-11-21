@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module JsonReader (readJson) where
 
 import System.IO  
@@ -8,6 +10,7 @@ import MyError
 import RandomLib
 import Data.Maybe
 import Data.Char
+import Control.Exception
 
 data JsonData = JsonStr {name :: String, value :: String} | JsonTab {name :: String, tabValue :: [JsonData]} | JsonValue {value :: String} deriving (Show)
 
@@ -30,8 +33,8 @@ safeInit [] = []
 safeInit x = init x
 
 readJson path str = do
-    handle <- openFile path ReadMode
-    contents <- hGetContents handle
+    handle <- catch (openFile path ReadMode >>= (\x -> return (Just x))) (\(_::SomeException) -> myError True ("Cannot open " ++ path) >> return Nothing)
+    contents <- hGetContents (fromJust handle)
     let myData = stringToJsonData $ foldlV (++) $ words contents
     checkJson myData
     let machineName = (safeInit . safeTail) $ head $ getNameValue "\"name\"" myData
@@ -51,7 +54,7 @@ readJson path str = do
     let turing = newTuring md str
     checkTuring str turing
     putStrLn $ describe turing
-    hClose handle
+    hClose (fromJust handle)
     return (turing)
 
 checkTuring :: String -> Turing -> IO ()
