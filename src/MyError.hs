@@ -1,5 +1,6 @@
 module MyError
     ( myError
+    , exit
     ) where
 
 import System.Exit
@@ -11,3 +12,5 @@ myError False str = do
 myError _ str = do
     putStrLn $ "JSON ERROR: " ++ str
     exitWith (ExitFailure $ length str)
+
+exit = exitWith ExitSuccess
