@@ -2,7 +2,7 @@ module Turing
 ( Turing(..)
 , State
 , Direction
-, MachineDescription
+, MachineDescription(..)
 , describe
 , isFinished
 , newTransition
@@ -14,7 +14,7 @@ module Turing
 , getBandString
 , turingToString) where
 
-import Result
+import RandomLib
 import Data.Char
 
 type State = String
@@ -54,12 +54,12 @@ describe :: Turing -> String
 describe (Turing md _ _ _) =
     let space = mdMaxSize md
         name = "Name: " ++ replicate (space - length "Name:  ") '.' ++ " " ++ mdName md ++ "\n"
-        alphabet = "Alphabet: " ++ replicate (space - length "Alphabet:  ") '.' ++ " [" ++ (init $ tail $ foldl1 (++) $ map (\x -> " " ++ [x] ++ ",") $ mdAlphabet md) ++ "]\n"
+        alphabet = "Alphabet: " ++ replicate (space - length "Alphabet:  ") '.' ++ " [" ++ (init $ tail $ foldlV (++) $ map (\x -> " " ++ [x] ++ ",") $ mdAlphabet md) ++ "]\n"
         blank = "Blank: " ++ replicate (space - length "Blank:  ") '.' ++ " " ++ [mdBlank md] ++ "\n"
-        states = "States: " ++ replicate (space - length "States:  ") '.' ++ " [" ++ (init $ tail $ foldl1 (++) $ map (\x -> " " ++ x ++ ",") $ mdAllStates md) ++ "]\n"
+        states = "States: " ++ replicate (space - length "States:  ") '.' ++ " [" ++ (init $ tail $ foldlV (++) $ map (\x -> " " ++ x ++ ",") $ mdAllStates md) ++ "]\n"
         initial = "Initial: " ++ replicate (space - length "Initial:  ") '.' ++ " " ++ mdInitState md ++ "\n"
-        final = "Finals: " ++ replicate (space - length "Finals:  ") '.' ++ " [" ++ (init $ tail $ foldl1 (++) $ map (\x -> " " ++ x ++ ",") $ mdFinalStates md) ++ "]\n"
-        transitions = "Transitions:\n" ++ (foldl1 (++) $ map ((++ "\n") . transitionToString space) $ mdTrasitions md)
+        final = "Finals: " ++ replicate (space - length "Finals:  ") '.' ++ " [" ++ (init $ tail $ foldlV (++) $ map (\x -> " " ++ x ++ ",") $ mdFinalStates md) ++ "]\n"
+        transitions = "Transitions:\n" ++ (foldlV (++) $ map ((++ "\n") . transitionToString space) $ mdTrasitions md)
     in name ++ alphabet ++ blank ++ states ++ initial ++ final ++ transitions
 
 turingToString :: Turing -> String
@@ -68,11 +68,11 @@ turingToString (Turing md b a cs) = show md ++ show b ++ show (take 15 a) ++ sho
 directionFromString :: String -> Direction
 directionFromString s
     | newS `elem` ["right", "\"right\""] = DRight
-    | otherwise = DLeft
+    | newS `elem` ["left", "\"left\""] = DLeft
     where newS = map toLower s
 
 newTransitionLst :: [String] -> Transition
-newTransitionLst (cs:cc:ts:tc:d:_) = newTransition cs cc ts tc d
+newTransitionLst (cs:d:cc:ts:tc:_) = newTransition cs cc ts tc d
 
 newTransition :: State -> String -> State -> String -> String -> Transition
 newTransition cs cc ts tc d = Transition cs (head cc) ts (head tc) (directionFromString d)
@@ -91,7 +91,7 @@ getBandString (Turing _ b (a:as) _) = "[" ++ b ++ "<" ++ [a] ++ ">" ++ take (15 
 
 makeTransitionString :: Turing -> Result (Turing, String)
 makeTransitionString t
-    | trans == newTransition "" "." "" "." "" = Err ("There is no transition adapted to this case\nBand:  " ++ getBandString newT ++ "\nState: " ++ tuCurState newT)
+    | trans == newTransition "" "." "" "." "left" = Err ("There is no transition adapted to this case\nBand:  " ++ getBandString newT ++ "\nState: " ++ tuCurState newT)
     | otherwise = Ok (newT, getBandString t ++ "  " ++ transitionToString (mdMaxSize $ tuDesc t)trans)
     where (newT, trans) = makeTransition t
 
@@ -101,7 +101,7 @@ makeTransition myTur@(Turing desc bef aft curState) = (Turing desc newBef newAft
         trans = mdTrasitions desc
         ((newBef, newAft, newState), tr) = makeTransition' bef aft curState trans
         makeTransition' :: String -> String -> State -> [Transition] -> ((String, String, State), Transition)
-        makeTransition' b a cs [] = ((b, a, cs), newTransition "" "." "" "." "")
+        makeTransition' b a cs [] = ((b, a, cs), newTransition "" "." "" "." "left")
         makeTransition'  b aft@(a:as) cs (x:xs)
             | trCurState x == cs && trCurChar x == a = (applyTransiton b aft cs x, x)
             | otherwise = makeTransition' b aft cs xs

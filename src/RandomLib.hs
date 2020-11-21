@@ -1,9 +1,10 @@
-module Result
+module RandomLib
 ( Result(..)
 , isOk
 , isErr
 , fromOk
 , fromErr
+, foldlV
 ) where
 
 data Result a = Ok a | Err String
@@ -20,3 +21,5 @@ fromOk (Ok x) = x
 
 fromErr :: Result a -> String
 fromErr (Err x) = x
+
+foldlV f lst = foldl f [] lst

@@ -1,7 +1,7 @@
 module Main where
 
 import Turing
-import Result
+import RandomLib
 import MyError
 import JsonReader
 
@@ -14,7 +14,7 @@ loopToFinish :: Turing -> IO ()
 loopToFinish myTuring
     | isFinished myTuring = putStrLn $ getBandString myTuring ++ "  " ++ tuCurState myTuring
 loopToFinish myTuring
-    | isErr res = myError $ fromErr res
+    | isErr res = myError False $ fromErr res
     | otherwise = do
         let (newTuring, str) = fromOk res
         putStrLn str

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 43abbd5cb3ef3fb158361a70e1fce489d89670ae3cf57b2a15fcdb2efb0c0866
+-- hash: 69aef58bb23b36cf174aba89d41ca569ef1ec75df2d1b84ffbdc24cded1925c5
 
 name:           Turing
 version:        0.1.0.0
@@ -29,7 +29,7 @@ library
   exposed-modules:
       JsonReader
       MyError
-      Result
+      RandomLib
       Turing
   other-modules:
       Paths_Turing
