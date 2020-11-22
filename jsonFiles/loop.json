@@ -1,0 +1,24 @@
+{
+    "name" : "loop",
+    "alphabet" : [ "1", "2", "3", "4", "5", "."],
+    "blank" : ".",
+    "states" : [ "scanright", "scanleft", "HALT"],
+    "initial" : "scanright",
+    "finals" : [ "HALT" ],
+    "transitions" : {
+        "scanright": [
+            { "read" : "1", "to_state": "scanright", "write": "1", "action": "RIGHT"},
+            { "read" : "2", "to_state": "scanright", "write": "2", "action": "Right"},
+            { "read" : "4", "to_state": "scanright", "write": "4", "action": "Right"},
+            { "read" : "3", "to_state": "scanleft", "write": "3", "action": "Left"},
+            { "read" : ".", "to_state": "scanright", "write": "4", "action": "RIGHT"}
+        ],
+        "scanleft": [
+            { "read" : "3", "to_state": "scanleft", "write": "3", "action": "Left"},
+            { "read" : "2", "to_state": "scanleft", "write": "2", "action": "Left"},
+            { "read" : "4", "to_state": "scanleft", "write": ".", "action": "Left"},
+            { "read" : "1", "to_state": "scanright", "write": "1", "action": "RIGHT"},
+            { "read" : ".", "to_state": "HALT", "write": ".", "action": "RIGHT"}
+        ]
+    }
+}
