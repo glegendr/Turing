@@ -16,6 +16,7 @@ module Turing
 
 import RandomLib
 import Data.Char
+import qualified Data.Set as Set
 
 type State = String
 
@@ -36,12 +37,15 @@ data MachineDescription = MachineDescription { mdName :: String
                                              , mdFinalStates :: [State]
                                              , mdTrasitions :: [Transition]
                                              , mdMaxSize :: Int
+                                             , mdBandSize :: Int
+                                             , mdGenericChar :: Bool
                                              } deriving (Show)
 
 data Turing = Turing { tuDesc :: MachineDescription
                      , tuBef :: String
                      , tuAft :: String
                      , tuCurState :: State
+                     , tuSet :: Set.Set (String, String, State)
                      } deriving (Show)  
 
 isFinished :: Turing -> Bool
@@ -51,7 +55,7 @@ isFinished myTuring = cs `elem` finalStates
         finalStates = mdFinalStates $ tuDesc myTuring
 
 describe :: Turing -> String
-describe (Turing md _ _ _) =
+describe (Turing md _ _ _ _) =
     let space = mdMaxSize md
         name = "Name: " ++ replicate (space - length "Name:  ") '.' ++ " " ++ mdName md ++ "\n"
         alphabet = "Alphabet: " ++ replicate (space - length "Alphabet:  ") '.' ++ " [" ++ (init $ tail $ foldlV (++) $ map (\x -> " " ++ [x] ++ ",") $ mdAlphabet md) ++ "]\n"
@@ -63,7 +67,7 @@ describe (Turing md _ _ _) =
     in name ++ alphabet ++ blank ++ states ++ initial ++ final ++ transitions
 
 turingToString :: Turing -> String
-turingToString (Turing md b a cs) = show md ++ show b ++ show (take 15 a) ++ show cs 
+turingToString (Turing md b a cs _) = show md ++ show b ++ show (take 15 a) ++ show cs 
 
 directionFromString :: String -> Direction
 directionFromString s
@@ -78,36 +82,58 @@ newTransition :: State -> String -> State -> String -> String -> Transition
 newTransition cs cc ts tc d = Transition cs (head cc) ts (head tc) (directionFromString d)
 
 newMachineDescription :: String -> String -> String -> [State] -> State -> [State] -> [Transition] -> MachineDescription
-newMachineDescription n a b as is fs t = MachineDescription n a (head b) as is fs t (maximum ((length "Transitions:"): map length as) + 6)
+newMachineDescription n a b as is fs t = MachineDescription n a (head b) as is fs t (maximum ((length "Transitions:"): map length as) + 6) 0 (not $ '_' `elem` a)
 
 newTuring :: MachineDescription -> String -> Turing
-newTuring md str = Turing md [] (str ++ repeat (mdBlank md)) (mdInitState md)
+newTuring md str = Turing (md {mdBandSize = len}) [] tape state (Set.singleton ([], take (len + 2) tape, state))
+    where
+        state = mdInitState md
+        len = length str
+        tape = (str ++ repeat (mdBlank md))
 
 transitionToString :: Int -> Transition -> String
 transitionToString space (Transition cs cc ts tc d)= "(" ++ cs ++ ", " ++ [cc] ++ ") " ++ replicate (space - length cs - 7) '.' ++ " (" ++ ts ++ ", " ++ [tc] ++ ", " ++ show d ++ ")"
 
 getBandString :: Turing -> String
-getBandString (Turing _ b (a:as) _) = "[" ++ b ++ "<" ++ [a] ++ ">" ++ take (15 - (length b + 1)) as ++ "]"
+getBandString (Turing md b (a:as) _ _) = "[" ++ b ++ "<" ++ [a] ++ ">" ++ take ((mdBandSize md + 2) - (length b + 1)) as ++ "]"
 
 makeTransitionString :: Turing -> Result (Turing, String)
 makeTransitionString t
-    | trans == newTransition "" "." "" "." "left" = Err ("There is no transition adapted to this case\nBand:  " ++ getBandString newT ++ "\nState: " ++ tuCurState newT)
+    | isErr ret = errFromErr ret
     | otherwise = Ok (newT, getBandString t ++ "  " ++ transitionToString (mdMaxSize $ tuDesc t)trans)
-    where (newT, trans) = makeTransition t
+    where
+        ret = makeTransition t
+        (newT, trans) = fromOk ret
 
-makeTransition :: Turing -> (Turing, Transition)
-makeTransition myTur@(Turing desc bef aft curState) = (Turing desc newBef newAft newState, tr)
+delLastBlank :: Char -> String -> String
+delLastBlank c str = reverse $ dropWhile (== c) $ reverse str
+
+makeTransition :: Turing -> Result (Turing, Transition)
+makeTransition myTur@(Turing desc bef aft curState set)
+    | isErr ret = Err $ fromErr ret ++ "\nTape:  " ++ getBandString myTur ++ "\nState: " ++ tuCurState myTur
+    | Set.member newT set = Err $ "Loop detected" ++ "\nTape: " ++ getBandString myTur ++ "\nNew Tape: "++ getBandString newTur ++ "\nState: " ++ tuCurState myTur ++ "\nTransition: " ++ transitionToString (len + 2) tr
+    | otherwise = Ok (newTur, tr)
     where 
+        newTur = Turing desc newBef newAft newState (Set.insert newT set)
+        blank = mdBlank desc
+        newT = (delLastBlank blank newBef, take (len + 2) newAft, newState)
+        len = mdBandSize desc
         trans = mdTrasitions desc
-        ((newBef, newAft, newState), tr) = makeTransition' bef aft curState trans
-        makeTransition' :: String -> String -> State -> [Transition] -> ((String, String, State), Transition)
-        makeTransition' b a cs [] = ((b, a, cs), newTransition "" "." "" "." "left")
-        makeTransition'  b aft@(a:as) cs (x:xs)
-            | trCurState x == cs && trCurChar x == a = (applyTransiton b aft cs x, x)
-            | otherwise = makeTransition' b aft cs xs
+        ret = makeTransition' bef aft curState trans (mdGenericChar desc)
+        ((newBef, newAft, newState), tr) = fromOk ret
+        makeTransition' :: String -> String -> State -> [Transition] -> Bool -> Result ((String, String, State), Transition)
+        makeTransition' b _ _ [] _ = Err "There is no transition adapted to this case"
+        makeTransition'  b aft@(a:as) cs (x:xs) generic
+            | trCurState x == cs && (trCurChar x == a || (trCurChar x == '_' && generic)) && isOk ret = Ok (fromOk ret, x)
+            | trCurState x == cs && trCurChar x == a = errFromErr ret
+            | otherwise = makeTransition' b aft cs xs generic
+            where ret = applyTransiton b aft cs x
 
-
-applyTransiton :: String -> String -> State -> Transition -> (String, String, State)
-applyTransiton b (_:as) _ (Transition _ _ ts tc DRight) = (b ++ [tc], as, ts)
-applyTransiton [] a cs _ = ([], a, cs)
-applyTransiton b (_:as) _ (Transition _ _ ts tc _) = (init b, last b : tc : as, ts)
+applyTransiton :: String -> String -> State -> Transition -> Result (String, String, State)
+applyTransiton b (a:as) _ (Transition _ _ ts tc DRight)
+    | tc == '_' = Ok (b ++ [a], as, ts)
+    | otherwise = Ok (b ++ [tc], as, ts)
+applyTransiton [] a cs x = Err $ "Reader head stuck in the leftmost character of the tape\nTransition: " ++ transitionToString (length (trCurState x) + 9) x
+applyTransiton b (a:as) _ (Transition _ _ ts tc _)
+    | tc == '_' = Ok (init b, last b : a : as, ts)
+    | otherwise = Ok (init b, last b : tc : as, ts)

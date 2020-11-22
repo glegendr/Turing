@@ -4,6 +4,9 @@ module RandomLib
 , isErr
 , fromOk
 , fromErr
+, errFromErr
+, safeTail
+, safeInit
 , foldlV
 ) where
 
@@ -21,5 +24,16 @@ fromOk (Ok x) = x
 
 fromErr :: Result a -> String
 fromErr (Err x) = x
+
+errFromErr :: Result a -> Result b
+errFromErr res = Err (fromErr res)
+
+safeTail :: [a] -> [a]
+safeTail [] = []
+safeTail (_:xs) = xs
+
+safeInit :: [a] -> [a]
+safeInit [] = []
+safeInit x = init x
 
 foldlV f lst = foldl f [] lst

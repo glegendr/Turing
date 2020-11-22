@@ -24,14 +24,6 @@ jsonDataToString (JsonStr b a) = b ++ " : " ++ a ++ "\n"
 jsonDataToString (JsonValue x) = x ++ "\n"
 jsonDataToString (JsonTab b a) = b ++ "\n{" ++ foldlV (++) (map jsonDataToString a) ++ "}\n"
 
-safeTail :: [a] -> [a]
-safeTail [] = []
-safeTail (_:xs) = xs
-
-safeInit :: [a] -> [a]
-safeInit [] = []
-safeInit x = init x
-
 readJson path str = do
     handle <- catch (openFile path ReadMode >>= (\x -> return (Just x))) (\(_::SomeException) -> myError True ("Cannot open " ++ path) >> return Nothing)
     contents <- hGetContents (fromJust handle)
@@ -58,7 +50,7 @@ readJson path str = do
     return (turing)
 
 checkTuring :: String -> Turing -> IO ()
-checkTuring str (Turing md _ band _) = do
+checkTuring str (Turing md _ band _ _) = do
     let alphabet = mdAlphabet md
     let blank = mdBlank md
     case foldl (&&) True (map (\x -> x `elem` alphabet && x /= blank) str) of
@@ -84,7 +76,7 @@ checkTransition _ _ _ ([]:_) = myError True "Transition not well formated. Empty
 checkTransition i alpha states (x:xs)
     | i `elem` [0, 3] && x `notElem` states = myError True $ "Unknown state \"" ++ x ++ "\""
     | i `elem` [2, 4] && length x /= 1 =  myError True "Multiple character in \"read\" and/or \"write\" tag"
-    | i `elem` [2, 4] && (head x) `notElem` alpha =  myError True $ "\"" ++ x ++ "\" isn't in the alphabet"
+    | i `elem` [2, 4] && (head x) `notElem` alpha && (head x) /= '_' =  myError True $ "\"" ++ x ++ "\" isn't in the alphabet"
 checkTransition 1 _ _ (x:xs)
     | newS `notElem` ["right", "left"] = myError True $  "Unkown directrion \"" ++ x ++ "\" in action tag"
     where newS = map toLower x
