@@ -1,0 +1,31 @@
+{
+    "name" : "0n1n_lang",
+    "alphabet" : [ "0", "1", ".", "y", "n"],
+    "blank" : ".",
+    "states" : [ "init", "go_right", "go_left", "del_one", "go_for_error", "TRUE", "FALSE" ],
+    "initial" : "init",
+    "finals" : [ "TRUE", "FALSE" ],
+    "transitions" : {
+        "init": [
+            { "read" : "0", "to_state": "go_right", "write": ".", "action": "RIGHT"},
+            { "read" : ".", "to_state": "TRUE", "write": "y", "action": "RIGHT"},
+            { "read" : "_", "to_state": "go_for_error", "write": "_", "action": "RIGHT"}
+        ],
+        "go_right": [
+            { "read" : ".", "to_state": "del_one", "write": ".", "action": "LEFT"},
+            { "read" : "_", "to_state": "go_right", "write": "_", "action": "RIGHT"}
+        ],
+        "go_left": [
+            { "read" : ".", "to_state": "init", "write": ".", "action": "RIGHT"},
+            { "read" : "_", "to_state": "go_left", "write": "_", "action": "LEFT"}
+        ],
+        "del_one": [
+            { "read" : "1", "to_state": "go_left", "write": ".", "action": "LEFT"},
+            { "read" : "_", "to_state": "FALSE", "write": "n", "action": "RIGHT"}
+        ],
+        "go_for_error": [
+            { "read" : ".", "to_state": "FALSE", "write": "n", "action": "RIGHT"},
+            { "read" : "_", "to_state": "go_for_error", "write": "_", "action": "RIGHT"}
+        ]
+    }
+}
