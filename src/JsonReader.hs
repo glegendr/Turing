@@ -24,6 +24,12 @@ jsonDataToString (JsonStr b a) = b ++ " : " ++ a ++ "\n"
 jsonDataToString (JsonValue x) = x ++ "\n"
 jsonDataToString (JsonTab b a) = b ++ "\n{" ++ foldlV (++) (map jsonDataToString a) ++ "}\n"
 
+isGenericWellPlaced :: String -> Bool
+isGenericWellPlaced [] = True
+isGenericWellPlaced ('_':[]) = True
+isGenericWellPlaced ('_':xs) = False
+isGenericWellPlaced (_:xs) = isGenericWellPlaced xs
+
 readJson path str = do
     handle <- catch (openFile path ReadMode >>= (\x -> return (Just x))) (\(_::SomeException) -> myError True ("Cannot open " ++ path) >> return Nothing)
     contents <- hGetContents (fromJust handle)
@@ -40,11 +46,16 @@ readJson path str = do
     let initial = (safeInit . safeTail) $ head $ getNameValue "\"initial\"" myData
     let finals = map (safeInit . safeTail) $ getNameValue "\"finals\"" myData
     let rawTrans = JsonTab "" $ map (\x -> JsonTab (name x) (map (\(JsonTab zn zv) -> JsonTab zn (sortOn name zv)) (tabValue x))) $ tabValue $ fromJust $ find ((== "\"transitions\"") . name) (tabValue myData)
+    let warningTransition = map fst $ filter ((== False) . snd) $ map (\x -> ((safeInit . safeTail) x, isGenericWellPlaced $ foldlV (++) $ map (safeInit . safeTail) $ foldlV (++) $ map (safeInit . safeInit . safeTail) $ divide 4 $ getNameValue x rawTrans)) states
     let transitions = map (map (safeInit . safeTail)) $ foldlV (++) $ map (\x -> map (x:) $ divide 4 $ getNameValue x rawTrans) states
     applyTab (checkTransition 0 alphabet newState) transitions
     let md = newMachineDescription machineName alphabet blank newState initial finals (map newTransitionLst transitions)
     let turing = newTuring md str
     checkTuring str turing
+    case ('_' `elem` alphabet, warningTransition) of
+        (True, _) -> return ()
+        (_, []) -> return ()
+        (_, wt) -> myWarning $ "Transitions will be skipped due to generic character in {" ++ (init $ tail $ foldlV (++) $ map (\z -> " " ++ z ++ ",") wt) ++ "}"
     putStrLn $ describe turing
     hClose (fromJust handle)
     return (turing)

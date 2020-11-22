@@ -1,7 +1,5 @@
 module Turing
 ( Turing(..)
-, State
-, Direction
 , MachineDescription(..)
 , describe
 , isFinished
