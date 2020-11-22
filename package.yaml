@@ -17,6 +17,11 @@ description:         Please see the README on GitHub at <https://github.com/gleg
 
 dependencies:
 - base >= 4.7 && < 5
+- containers
+- ansi-terminal
+- time
+- rainbow
+- text
 
 library:
   source-dirs: src
