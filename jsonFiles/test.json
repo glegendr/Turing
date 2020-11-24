@@ -1,0 +1,57 @@
+{
+    "name" : "test",
+    "alphabet" : [ "1", ".", "+", "=", "g", "r", "|", ">", "R", "L", "d", "/", "i", "s"],
+    "blank" : ".",
+    "patern_matching_function" : "TRUE",
+    "patern_matching_variables" : "TRUE",
+    "states" : [ "READ", "goto", "replace", "stop", "stop2", "HALT", "description", "description2", "input", "input2"],
+    "initial" : "READ",
+    "finals" : [ "HALT" ],
+    "transitions" : {
+        "READ" : [
+            { "read" : "s", "to_state": "READ_F_stop", "write": "s", "action": "RIGHT"},
+            { "read" : "r", "to_state": "READ_F_replace", "write": "r", "action": "RIGHT"},
+            { "read" : "i", "to_state": "READ_F_input", "write": "i", "action": "RIGHT"},
+            { "read" : "g", "to_state": "READ_F_goto", "write": "g", "action": "RIGHT"},
+            { "read" : "d", "to_state": "READ_F_description", "write": "d", "action": "RIGHT"},
+            { "read" : "|", "to_state": "F", "write": "|", "action": "RIGHT"},
+            { "read" : "R", "to_state": "READ_F_RIGHT", "write": "R", "action": "RIGHT"},
+            { "read" : "L", "to_state": "READ_F_LEFT", "write": "L", "action": "RIGHT"},
+            { "read" : "/", "to_state": "READ", "write": "/", "action": "RIGHT"},
+            { "read" : "_", "to_state": "READ_F_CURR", "write": "_", "action": "RIGHT"}
+        ],
+        "goto" : [
+            { "read" : "Y", "to_state": "Y_F", "write": "Y", "action": "D"},
+            { "read" : ".", "to_state": "HALT", "write": ".", "action": "D"},
+            { "read" : "_", "to_state": "_goto_D_Y_F", "write": "_", "action": "D"}
+        ],
+        "replace" : [
+            { "read" : "_", "to_state": "Y_F", "write": "Y", "action": "D"},
+            { "read" : "_", "to_state": "X_replace_D_Y_F", "write": "_", "action": "D"}
+        ],
+        "stop" : [
+            { "read" : "Y", "to_state": "HALT", "write": "Y", "action": "RIGHT"},
+            { "read" : "_", "to_state": "_stop2_D_Y_F", "write": "_", "action": "RIGHT"}
+        ],
+        "stop2" : [
+            { "read" : "_", "to_state": "Y_F", "write": "_", "action": "LEFT"}
+        ],
+        "description" : [
+            { "read" : "Y", "to_state": "_description2_D_Y_F", "write": "Y", "action": "LEFT"},
+            { "read" : "_", "to_state": "_description_D_Y_F", "write": "_", "action": "LEFT"}
+        ],
+        "description2" : [
+            { "read" : "/", "to_state": "READ_F", "write": "/", "action": "RIGHT"},
+            { "read" : "_", "to_state": "_description_D_Y_F", "write": "_", "action": "LEFT"}
+        ],
+        "input" : [
+            { "read" : ".", "to_state": "_input2_D_Y_F", "write": ".", "action": "LEFT"},
+            { "read" : "_", "to_state": "_input_D_Y_F", "write": "_", "action": "RIGHT"}
+        ],
+        "input2" : [
+            { "read" : ">", "to_state": "Y_F", "write": ">", "action": "LEFT"},
+            { "read" : "_", "to_state": "_input2_D_Y_F", "write": "_", "action": "LEFT"}
+        ]
+        
+    }
+}

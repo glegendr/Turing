@@ -48,7 +48,7 @@ readJson path str = do
     let rawTrans = JsonTab "" $ map (\x -> JsonTab (name x) (map (\(JsonTab zn zv) -> JsonTab zn (sortOn name zv)) (tabValue x))) $ tabValue $ fromJust $ find ((== "\"transitions\"") . name) (tabValue myData)
     let warningTransition = map fst $ filter ((== False) . snd) $ map (\x -> ((safeInit . safeTail) x, isGenericWellPlaced $ foldlV (++) $ map (safeInit . safeTail) $ foldlV (++) $ map (safeInit . safeInit . safeTail) $ divide 4 $ getNameValue x rawTrans)) states
     let transitions = map (map (safeInit . safeTail)) $ foldlV (++) $ map (\x -> map (x:) $ divide 4 $ getNameValue x rawTrans) states
-    applyTab (checkTransition 0 alphabet newState) transitions
+    -- applyTab (checkTransition 0 alphabet newState) transitions
     let md = newMachineDescription machineName alphabet blank newState initial finals (map newTransitionLst transitions)
     let turing = newTuring md str
     checkTuring str turing
@@ -70,11 +70,11 @@ checkTuring str (Turing md _ band _ _) = do
     let initState = mdInitState md
     let allStates = mdAllStates md
     let finalStates = mdFinalStates md
-    if initState `notElem` allStates
-    then myError True $ "Initial state \"" ++ initState ++ " \"isn't in \"states\" tag"
-    else if any (`notElem` allStates) finalStates
-    then myError True "One of the final states isn't in \"states\" tag"
-    else return ()
+    -- if initState `notElem` allStates
+    -- then myError True $ "Initial state \"" ++ initState ++ " \"isn't in \"states\" tag"
+    -- else if any (`notElem` allStates) finalStates
+    -- then myError True "One of the final states isn't in \"states\" tag"
+    -- else return ()
     case mdName md of
         [] -> myError True "Empty name"
         "Hitler" -> myError True "Historical Paradox: Turing coundn't name one of his creation like this"
@@ -111,27 +111,27 @@ checkJson (JsonTab _ v) = do
     applyTab (\x -> case x of
         JsonStr _ _ -> return ()
         x -> myError True $ name x ++ " must be at format: " ++ name x ++ " : \"value\"") $ filter (flip elem allJsonStr . name) v
-    let transitions = tabValue $ fromJust $ find ((== "\"transitions\"") . name) v
-    let transNames = map value $ tabValue $ fromJust $ find ((== "\"states\"") . name) v
-    applyTab (\ x -> case x of
-            JsonValue value -> myError True $ "Value " ++ value ++ " not expected" 
-            otherwise -> return ()) transitions
-    applyTab (\x -> case x of
-        JsonTab _ _ -> return ()
-        x -> myError True $ name x ++ " must be a tab") $ filter (flip elem transNames . name) transitions
-    case checkDuplicate [] (sort (map name transitions)) of
-        [] -> return ()
-        x -> myError True $ "Duplicate tag " ++ x
-    case foldl (flip delete) (map name transitions) transNames of
-        [] -> return ()
-        x -> myError True $ "Unknow transition(s) state(s) {" ++ (init $ tail $ foldlV (++) $ map (\z -> " " ++ z ++ ",") x) ++ "}"
-    case all (\(JsonTab n1 v1) -> all (\x -> case x of
-            JsonTab _ v2 -> length v2 == 4 && all (\z -> case z of
-                JsonStr n _ -> n `elem` allTransitionValue
-                otherwise -> False) v2 && checkDuplicate [] (sort $ map name v2) == []
-            otherwise -> False) v1) transitions of
-        True -> return ()
-        False -> myError True "Transitions not well formated"
+    -- let transitions = tabValue $ fromJust $ find ((== "\"transitions\"") . name) v
+    -- let transNames = map value $ tabValue $ fromJust $ find ((== "\"states\"") . name) v
+    -- applyTab (\ x -> case x of
+    --         JsonValue value -> myError True $ "Value " ++ value ++ " not expected" 
+    --         otherwise -> return ()) transitions
+    -- applyTab (\x -> case x of
+    --     JsonTab _ _ -> return ()
+    --     x -> myError True $ name x ++ " must be a tab") $ filter (flip elem transNames . name) transitions
+    -- case checkDuplicate [] (sort (map name transitions)) of
+    --     [] -> return ()
+    --     x -> myError True $ "Duplicate tag " ++ x
+    -- case foldl (flip delete) (map name transitions) transNames of
+    --     [] -> return ()
+    --     x -> myError True $ "Unknow transition(s) state(s) {" ++ (init $ tail $ foldlV (++) $ map (\z -> " " ++ z ++ ",") x) ++ "}"
+    -- case all (\(JsonTab n1 v1) -> all (\x -> case x of
+    --         JsonTab _ v2 -> length v2 == 4 && all (\z -> case z of
+    --             JsonStr n _ -> n `elem` allTransitionValue
+    --             otherwise -> False) v2 && checkDuplicate [] (sort $ map name v2) == []
+    --         otherwise -> False) v1) transitions of
+    --     True -> return ()
+    --     False -> myError True "Transitions not well formated"
     return ()
 checkJson _ = myError True "Surround your Json data by \"{}\""
 

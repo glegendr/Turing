@@ -7,6 +7,8 @@ module RandomLib
 , errFromErr
 , safeTail
 , safeInit
+, safeHead
+, replace
 , foldlV
 ) where
 
@@ -35,5 +37,14 @@ safeTail (_:xs) = xs
 safeInit :: [a] -> [a]
 safeInit [] = []
 safeInit x = init x
+
+replace :: (a -> Bool) -> a -> [a] -> [a]
+replace _ _ [] = []
+replace f rep (x:xs)
+    | f x = rep : replace f rep xs
+    | otherwise = x : replace f rep xs
+
+safeHead [] = []
+safeHead (x:_) = x
 
 foldlV f lst = foldl f [] lst
