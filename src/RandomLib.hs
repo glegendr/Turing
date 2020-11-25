@@ -9,8 +9,11 @@ module RandomLib
 , safeInit
 , safeHead
 , replace
+, stringToBool
 , foldlV
 ) where
+
+import Data.Char
 
 data Result a = Ok a | Err String
 
@@ -38,13 +41,20 @@ safeInit :: [a] -> [a]
 safeInit [] = []
 safeInit x = init x
 
+safeHead :: [[a]] -> [a]
+safeHead [] = []
+safeHead (x:_) = x
+
 replace :: (a -> Bool) -> a -> [a] -> [a]
 replace _ _ [] = []
 replace f rep (x:xs)
     | f x = rep : replace f rep xs
     | otherwise = x : replace f rep xs
 
-safeHead [] = []
-safeHead (x:_) = x
+stringToBool :: String -> Bool
+stringToBool s
+    | newS == "true" = True
+    | otherwise = False
+    where newS = map toLower s
 
 foldlV f lst = foldl f [] lst

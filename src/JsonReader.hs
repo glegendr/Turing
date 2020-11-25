@@ -11,6 +11,7 @@ import RandomLib
 import Data.Maybe
 import Data.Char
 import Control.Exception
+import Data.List.Split
 
 data JsonData = JsonStr {name :: String, value :: String} | JsonTab {name :: String, tabValue :: [JsonData]} | JsonValue {value :: String} deriving (Show)
 
@@ -48,8 +49,10 @@ readJson path str = do
     let rawTrans = JsonTab "" $ map (\x -> JsonTab (name x) (map (\(JsonTab zn zv) -> JsonTab zn (sortOn name zv)) (tabValue x))) $ tabValue $ fromJust $ find ((== "\"transitions\"") . name) (tabValue myData)
     let warningTransition = map fst $ filter ((== False) . snd) $ map (\x -> ((safeInit . safeTail) x, isGenericWellPlaced $ foldlV (++) $ map (safeInit . safeTail) $ foldlV (++) $ map (safeInit . safeInit . safeTail) $ divide 4 $ getNameValue x rawTrans)) states
     let transitions = map (map (safeInit . safeTail)) $ foldlV (++) $ map (\x -> map (x:) $ divide 4 $ getNameValue x rawTrans) states
-    -- applyTab (checkTransition 0 alphabet newState) transitions
-    let md = newMachineDescription machineName alphabet blank newState initial finals (map newTransitionLst transitions)
+    let genericVariable = stringToBool $ (safeInit . safeTail) $ safeHead $ getNameValue "\"generic_variable\"" myData
+    let genericFunction = stringToBool $ (safeInit . safeTail) $ safeHead $ getNameValue "\"generic_function\"" myData
+    applyTab (checkTransition (genericVariable, genericFunction) 0 alphabet newState) transitions
+    let md = newMachineDescription machineName alphabet blank newState initial finals (map newTransitionLst transitions) genericVariable genericFunction
     let turing = newTuring md str
     checkTuring str turing
     case ('_' `elem` alphabet, warningTransition) of
@@ -70,28 +73,31 @@ checkTuring str (Turing md _ band _ _) = do
     let initState = mdInitState md
     let allStates = mdAllStates md
     let finalStates = mdFinalStates md
-    -- if initState `notElem` allStates
-    -- then myError True $ "Initial state \"" ++ initState ++ " \"isn't in \"states\" tag"
-    -- else if any (`notElem` allStates) finalStates
-    -- then myError True "One of the final states isn't in \"states\" tag"
-    -- else return ()
+    if initState `notElem` allStates
+    then myError True $ "Initial state \"" ++ initState ++ " \"isn't in \"states\" tag"
+    else if any (`notElem` allStates) finalStates
+    then myError True "One of the final states isn't in \"states\" tag"
+    else return ()
     case mdName md of
         [] -> myError True "Empty name"
         "Hitler" -> myError True "Historical Paradox: Turing coundn't name one of his creation like this"
         otherwise -> return ()
     return ()
 
-checkTransition :: Int -> String -> [String] ->[String] -> IO ()
-checkTransition _ _ _ [] = return ()
-checkTransition _ _ _ ([]:_) = myError True "Transition not well formated. Empty value"
-checkTransition i alpha states (x:xs)
-    | i `elem` [0, 3] && x `notElem` states = myError True $ "Unknown state \"" ++ x ++ "\""
-    | i `elem` [2, 4] && length x /= 1 =  myError True "Multiple character in \"read\" and/or \"write\" tag"
-    | i `elem` [2, 4] && (head x) `notElem` alpha && (head x) /= '_' =  myError True $ "\"" ++ x ++ "\" isn't in the alphabet"
-checkTransition 1 _ _ (x:xs)
-    | newS `notElem` ["right", "left"] = myError True $  "Unkown directrion \"" ++ x ++ "\" in action tag"
+checkTransition :: (Bool, Bool) -> Int -> String -> [String] -> [String] -> IO ()
+checkTransition _ _ _ _ [] = return ()
+checkTransition _ _ _ _ ([]:_) = myError True "Transition not well formated. Empty value"
+checkTransition (gv, gf) i alpha states (x:xs)
+    | (i == 0 || (i == 3 && not gf)) && x `notElem` states = myError True $ "Unknown state \"" ++ x ++ "\""
+    | i == 3 && any (`notElem` (states ++ [[], "X", "Y", "F", "D", "RIGHT", "LEFT", "CURR"])) (splitOn "_" x) = myError True $ "Generic state \"" ++ x ++ "\" not well fromated"
+    | i `elem` [2, 4] && length x /= 1 = myError True "Multiple character in \"read\" and/or \"write\" tag"
+    | i `elem` [2, 4] && (head x) `elem` "YX" && (head x) `notElem` alpha && not gf = myError True $ "\"" ++ x ++ "\" can only be used if Generic Functions are enable or if he is specified in the alphabet"
+    | i `elem` [2, 4] && (head x) `notElem` (alpha ++ "YX") && not (head x == '_' && gv) =  myError True $ "\"" ++ x ++ "\" isn't in the alphabet"
+checkTransition (_, gf) 1 _ _ (x:xs)
+    | newS == "d" && not gf = myError True "Direction \"D\" can only be used if Generic Functions are enable"
+    | newS `notElem` ["right", "left", "d"] = myError True $  "Unkown directrion \"" ++ x ++ "\" in action tag"
     where newS = map toLower x
-checkTransition i a s (_:xs) = checkTransition (i + 1) a s xs
+checkTransition g i a s (_:xs) = checkTransition g (i + 1) a s xs
 
 checkJson :: JsonData -> IO ()
 checkJson (JsonTab _ v) = do
@@ -111,27 +117,27 @@ checkJson (JsonTab _ v) = do
     applyTab (\x -> case x of
         JsonStr _ _ -> return ()
         x -> myError True $ name x ++ " must be at format: " ++ name x ++ " : \"value\"") $ filter (flip elem allJsonStr . name) v
-    -- let transitions = tabValue $ fromJust $ find ((== "\"transitions\"") . name) v
-    -- let transNames = map value $ tabValue $ fromJust $ find ((== "\"states\"") . name) v
-    -- applyTab (\ x -> case x of
-    --         JsonValue value -> myError True $ "Value " ++ value ++ " not expected" 
-    --         otherwise -> return ()) transitions
-    -- applyTab (\x -> case x of
-    --     JsonTab _ _ -> return ()
-    --     x -> myError True $ name x ++ " must be a tab") $ filter (flip elem transNames . name) transitions
-    -- case checkDuplicate [] (sort (map name transitions)) of
-    --     [] -> return ()
-    --     x -> myError True $ "Duplicate tag " ++ x
-    -- case foldl (flip delete) (map name transitions) transNames of
-    --     [] -> return ()
-    --     x -> myError True $ "Unknow transition(s) state(s) {" ++ (init $ tail $ foldlV (++) $ map (\z -> " " ++ z ++ ",") x) ++ "}"
-    -- case all (\(JsonTab n1 v1) -> all (\x -> case x of
-    --         JsonTab _ v2 -> length v2 == 4 && all (\z -> case z of
-    --             JsonStr n _ -> n `elem` allTransitionValue
-    --             otherwise -> False) v2 && checkDuplicate [] (sort $ map name v2) == []
-    --         otherwise -> False) v1) transitions of
-    --     True -> return ()
-    --     False -> myError True "Transitions not well formated"
+    let transitions = tabValue $ fromJust $ find ((== "\"transitions\"") . name) v
+    let transNames = map value $ tabValue $ fromJust $ find ((== "\"states\"") . name) v
+    applyTab (\ x -> case x of
+            JsonValue value -> myError True $ "Value " ++ value ++ " not expected" 
+            otherwise -> return ()) transitions
+    applyTab (\x -> case x of
+        JsonTab _ _ -> return ()
+        x -> myError True $ name x ++ " must be a tab") $ filter (flip elem transNames . name) transitions
+    case checkDuplicate [] (sort (map name transitions)) of
+        [] -> return ()
+        x -> myError True $ "Duplicate tag " ++ x
+    case foldl (flip delete) (map name transitions) transNames of
+        [] -> return ()
+        x -> myError True $ "Unknow transition(s) state(s) {" ++ (init $ tail $ foldlV (++) $ map (\z -> " " ++ z ++ ",") x) ++ "}"
+    case all (\(JsonTab n1 v1) -> all (\x -> case x of
+            JsonTab _ v2 -> length v2 == 4 && all (\z -> case z of
+                JsonStr n _ -> n `elem` allTransitionValue
+                otherwise -> False) v2 && checkDuplicate [] (sort $ map name v2) == []
+            otherwise -> False) v1) transitions of
+        True -> return ()
+        False -> myError True "Transitions not well formated"
     return ()
 checkJson _ = myError True "Surround your Json data by \"{}\""
 

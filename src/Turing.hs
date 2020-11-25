@@ -89,8 +89,8 @@ newTransitionLst (cs:d:cc:ts:tc:_) = newTransition cs cc ts tc d
 newTransition :: State -> String -> State -> String -> String -> Transition
 newTransition cs cc ts tc d = Transition cs (head cc) ts (head tc) (directionFromString d)
 
-newMachineDescription :: String -> String -> String -> [State] -> State -> [State] -> [Transition] -> MachineDescription
-newMachineDescription n a b as is fs t = MachineDescription n a (head b) as is fs t (maximum ((length "Transitions:"): map length as) + 6) 0 (not $ '_' `elem` a) True
+newMachineDescription :: String -> String -> String -> [State] -> State -> [State] -> [Transition] -> Bool -> Bool -> MachineDescription
+newMachineDescription n a b as is fs t gc gf = MachineDescription n a (head b) as is fs t (maximum ((length "Transitions:"): map length as) + 6) 0  gc gf
 
 newTuring :: MachineDescription -> String -> Turing
 newTuring md str = Turing (md {mdBandSize = len}) [] tape state (Set.singleton ([], take (len + 2) tape, state))
@@ -127,18 +127,20 @@ makeTransition myTur@(Turing desc bef aft curState set)
         newT = (delLastBlank blank newBef, take (len + 2) newAft, newState)
         len = mdBandSize desc
         trans = mdTrasitions desc
-        ret = makeTransition' bef aft curState trans (mdGenericChar desc) (tuDesc myTur)
+        ret = makeTransition' bef aft curState trans (tuDesc myTur)
         ((newBef, newAft, newState), tr) = fromOk ret
-        makeTransition' :: String -> String -> State -> [Transition] -> Bool -> MachineDescription -> Result ((String, String, State), Transition)
-        makeTransition' _ _ _ [] _ _ = Err "There is no transition adapted to this case"
-        makeTransition'  b aft@(a:as) cs (x:xs) generic md
-            | safeHead splited == "READ" && safeHead splitedTrans == "READ" && (transCC == a || (transCC == '_' && generic)) = Ok ((rb, ra, rs), rt)
+        makeTransition' :: String -> String -> State -> [Transition] -> MachineDescription -> Result ((String, String, State), Transition)
+        makeTransition' _ _ _ [] _  = Err "There is no transition adapted to this case"
+        makeTransition'  b aft@(a:as) cs (x:xs) md
+            | genericF && safeHead splited == "READ" && safeHead splitedTrans == "READ" && (transCC == a || (transCC == '_' && generic)) = Ok ((rb, ra, rs), rt)
             | trCurState x == cs && (transCC == a || (transCC == '_' && generic)) && isOk ret = Ok (fromOk ret, x)
             | trCurState x == cs && transCC == a = errFromErr ret
-            | myFunc == trCurState x && trCurState x /= [] &&(transCC == a || (transCC == '_' && generic) || (myX == a && transCC == 'X') || (myY == a && transCC == 'Y')) && isOk specialRet = Ok ((sb, sa, ss), st)
-            | myFunc == trCurState x && trCurState x /= [] && (transCC == a || (transCC == '_' && generic) || (myX == a && transCC == 'X') || (myY == a && transCC == 'Y')) = errFromErr specialRet
-            | otherwise = makeTransition' b aft cs xs generic md
+            | genericF && myFunc == trCurState x && trCurState x /= [] &&(transCC == a || (transCC == '_' && generic) || (myX == a && transCC == 'X') || (myY == a && transCC == 'Y')) && isOk specialRet = Ok ((sb, sa, ss), st)
+            | genericF && myFunc == trCurState x && trCurState x /= [] && (transCC == a || (transCC == '_' && generic) || (myX == a && transCC == 'X') || (myY == a && transCC == 'Y')) = errFromErr specialRet
+            | otherwise = makeTransition' b aft cs xs md
             where
+                generic = mdGenericChar md
+                genericF = mdGenericFunc md
                 transCC = trCurChar x
                 splited = splitOn "_" cs
                 (myX, myFunc, myDir, myY, myRest) = getFromSplited splited md
