@@ -1,10 +1,10 @@
 {
     "name" : "Universal_Turing_Machine",
-    "alphabet" : [ "1", ".", "+", "=", "g", "r", "|", ">", "R", "L", "d", "/", "i", "s"],
+    "alphabet" : [ "0", "1", ".", "+", "-", "=", "g", "r", "|", ">", "R", "L", "d", "/", "i", "s", "B", "o", "m", "M", "G", "y", "n", "C", "D", "S"],
     "blank" : ".",
     "generic_transitions" : "TRUE",
     "generic_variable" : "TRUE",
-    "states" : [ "READ", "goto", "replace", "stop", "stop2", "HALT", "description", "description2", "input", "input2"],
+    "states" : [ "READ", "goto", "replace", "stop", "HALT", "description", "description2", "input", "input2", "one", "match", "repMatch", "give", "giveCURR", "descriptionX", "descriptionX2", "gotoSafe"],
     "initial" : "READ",
     "finals" : [ "HALT" ],
     "transitions" : {
@@ -17,7 +17,15 @@
             { "read" : "|", "to_state": "F", "write": "|", "action": "RIGHT"},
             { "read" : "R", "to_state": "READ_F_RIGHT", "write": "R", "action": "RIGHT"},
             { "read" : "L", "to_state": "READ_F_LEFT", "write": "L", "action": "RIGHT"},
+            { "read" : "B", "to_state": "READ_F_.", "write": "B", "action": "RIGHT"},
             { "read" : "/", "to_state": "READ", "write": "/", "action": "RIGHT"},
+            { "read" : "o", "to_state": "READ_F_one", "write": "o", "action": "RIGHT"},
+            { "read" : "m", "to_state": "READ_F_match", "write": "m", "action": "RIGHT"},
+            { "read" : "M", "to_state": "READ_F_repMatch", "write": "M", "action": "RIGHT"},
+            { "read" : "G", "to_state": "READ_F_give", "write": "G", "action": "RIGHT"},
+            { "read" : "C", "to_state": "READ_F_giveCURR", "write": "C", "action": "RIGHT"},
+            { "read" : "D", "to_state": "READ_F_descriptionX", "write": "D", "action": "RIGHT"},
+            { "read" : "S", "to_state": "READ_F_gotoSafe", "write": "S", "action": "RIGHT"},
             { "read" : "_", "to_state": "READ_F_CURR", "write": "_", "action": "RIGHT"}
         ],
         "goto" : [
@@ -25,15 +33,16 @@
             { "read" : ".", "to_state": "HALT", "write": ".", "action": "D"},
             { "read" : "_", "to_state": "_goto_D_Y_F", "write": "_", "action": "D"}
         ],
+        "gotoSafe" : [
+            { "read" : "Y", "to_state": "Y_F", "write": "Y", "action": "D"},
+            { "read" : "_", "to_state": "_gotoSafe_D_Y_F", "write": "_", "action": "D"}
+        ],
         "replace" : [
             { "read" : "_", "to_state": "Y_F", "write": "Y", "action": "D"}
         ],
         "stop" : [
             { "read" : "Y", "to_state": "HALT", "write": "Y", "action": "RIGHT"},
-            { "read" : "_", "to_state": "_stop2_D_Y_F", "write": "_", "action": "RIGHT"}
-        ],
-        "stop2" : [
-            { "read" : "_", "to_state": "Y_F", "write": "_", "action": "LEFT"}
+            { "read" : "_", "to_state": "_one_LEFT_Y_F", "write": "_", "action": "RIGHT"}
         ],
         "description" : [
             { "read" : "Y", "to_state": "_description2_D_Y_F", "write": "Y", "action": "LEFT"},
@@ -50,7 +59,31 @@
         "input2" : [
             { "read" : ">", "to_state": "Y_F", "write": ">", "action": "LEFT"},
             { "read" : "_", "to_state": "_input2_D_Y_F", "write": "_", "action": "LEFT"}
-        ]
-        
+        ],
+        "one" : [
+            { "read" : "_", "to_state": "Y_F", "write": "_", "action": "D"}
+        ],
+        "match" : [
+            { "read" : "Y", "to_state": "HALT", "write": "_", "action": "LEFT"},
+            { "read" : "_", "to_state": "_one_LEFT_Y_F", "write": "_", "action": "RIGHT"}
+        ],
+        "repMatch" : [
+            { "read" : "X", "to_state": "HALT", "write": "Y", "action": "LEFT"},
+            { "read" : "_", "to_state": "_one_LEFT_Y_F", "write": "_", "action": "RIGHT"}
+        ],
+        "give" : [
+            { "read" : "_", "to_state": "_one_LEFT_Y_F", "write": "_", "action": "RIGHT"}
+        ],
+        "giveCURR" : [
+            { "read" : "_", "to_state": "_one_LEFT_CURR_F", "write": "_", "action": "RIGHT"}
+        ],
+        "descriptionX" : [
+            { "read" : "X", "to_state": "X_descriptionX2_D_Y_F", "write": "X", "action": "LEFT"},
+            { "read" : "_", "to_state": "X_descriptionX_D_Y_F", "write": "_", "action": "LEFT"}
+        ],
+        "descriptionX2" : [
+            { "read" : "/", "to_state": "READ_F", "write": "/", "action": "RIGHT"},
+            { "read" : "_", "to_state": "X_descriptionX_D_Y_F", "write": "_", "action": "LEFT"}
+        ]   
     }
 }

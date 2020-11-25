@@ -13,7 +13,7 @@ You can also use extra flags.
 |short|long|description|
 |:-:|:-:|:-:|
 |-h|--help|display help message|
-|-a|--animated|animate the machine's computing|    
+|-a|--animated|animate the machine's computing. You can give an extra speed like \"-a=50\" to speed up the program|    
 
 ![](unary_add.gif)
 ## Create your machine
@@ -101,4 +101,8 @@ To create a generic transitions list, you __MUST__ call your first building tran
 The input is the initial tape of your machine.    
 She __must__ not countain the blank character in.   
 ## Universal Turing Machine
-`/+iL>gR+sR=rL+rL1d+|>1+1=`
+This is a list of input solving precedent problems with the Universal Turing Machine:    
+- Unary_add : `"/+iL>gR+sR=rL+rL1d+|>1+1="`
+- Unary_sub : `"/-iR>gR=oLBrLBmL-rL=gL-rR-gR=oL=oL1mL-gL-oR-rR1rR=rLBrL=gL-oR-dL-|>11-1="`
+- 02n : `"/0iR>gR0GBMngRBoL0oL0rLBrLBG>Myd0|>000000"`
+- on1n : `"/0iR>gR0oLBMyrRBgRBoLBoLBMnG0MnrLBG0MnCLBD|/1iR>SR1gRBoLBoL0MnrLBMngLBoRBoR1MnrRBMyoRBMngR1oLBCLBD|>00111"`

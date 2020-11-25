@@ -16,7 +16,6 @@ import Data.Char
 import qualified Data.Set as Set
 import Data.List.Split
 import Data.List
-import Debug.Trace
 
 type State = String
 
@@ -104,10 +103,11 @@ getBandString (Turing md b (a:as) _ _) = "[" ++ b ++ "<" ++ [a] ++ ">" ++ take (
 makeTransitionString :: Turing -> Result (Turing, String)
 makeTransitionString t
     | isErr ret = errFromErr ret
-    | otherwise = Ok (newT, getBandString t ++ "  " ++ transitionToString (mdMaxSize $ tuDesc t)trans)
+    | otherwise = Ok (newT, getBandString t ++ "  " ++ (if length transString > 100 then (take 100 transString ++ " ... )") else transString))
     where
         ret = makeTransition t
         (newT, trans) = fromOk ret
+        transString = transitionToString (mdMaxSize $ tuDesc t) trans
 
 delLastBlank :: Char -> String -> String
 delLastBlank c str = reverse $ dropWhile (== c) $ reverse str
