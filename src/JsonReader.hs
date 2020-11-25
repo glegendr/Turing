@@ -31,10 +31,31 @@ isGenericWellPlaced ('_':[]) = True
 isGenericWellPlaced ('_':xs) = False
 isGenericWellPlaced (_:xs) = isGenericWellPlaced xs
 
+myWords :: String -> [String]
+myWords [] = []
+myWords str
+    | bef == [] = myWords aft
+    | otherwise = bef : myWords aft
+    where (bef, aft) = spanOutString (not . isSpace) str 
+
+spanOutString :: (Char -> Bool) -> String -> (String, String)
+spanOutString _ [] = ([], [])
+spanOutString f str =
+    let bef = spanOutString' False f str
+        aft = drop (length bef) str
+    in (bef, safeTail aft)
+
+spanOutString' :: Bool -> (Char -> Bool) -> String -> String
+spanOutString' _ _ [] = []
+spanOutString' b f (x:xs)
+    | not (f x) && not b = []
+    | x == '\"' = x : spanOutString' (not b) f xs
+    | otherwise = x : spanOutString' b f xs
+
 readJson path str = do
     handle <- catch (openFile path ReadMode >>= (\x -> return (Just x))) (\(_::SomeException) -> myError True ("Cannot open " ++ path) >> return Nothing)
     contents <- hGetContents (fromJust handle)
-    let myData = stringToJsonData $ foldlV (++) $ words contents
+    let myData = stringToJsonData $ foldlV (++) $ myWords contents
     checkJson myData
     let machineName = (safeInit . safeTail) $ head $ getNameValue "\"name\"" myData
     let alphabet = foldlV (++) $ map (safeInit . safeTail) $ getNameValue "\"alphabet\"" myData
