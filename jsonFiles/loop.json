@@ -5,6 +5,7 @@
     "states" : [ "scanright", "scanleft", "HALT"],
     "initial" : "scanright",
     "finals" : [ "HALT" ],
+    "generic_variable" : "TRUE",
     "transitions" : {
         "scanright": [
             { "read" : "3", "to_state": "scanleft", "write": "3", "action": "Left"},

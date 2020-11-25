@@ -5,18 +5,17 @@
     "states" : [ "scanright", "eraseone", "addone", "HALT" ],
     "initial" : "scanright",
     "finals" : [ "HALT" ],
+    "generic_variable" : "TRUE",
     "transitions" : {
         "scanright": [
-            { "read" : "=", "to_state": "HALT", "write": ".", "action": "RIGHT"},
-            { "read" : ".", "to_state": "HALT", "write": ".", "action": "RIGHT"},
             { "read" : "1", "to_state": "scanright", "write": "1", "action": "RIGHT"},
-            { "read" : "+", "to_state": "eraseone", "write": "+", "action": "RIGHT"}
+            { "read" : "+", "to_state": "eraseone", "write": "+", "action": "RIGHT"},
+            { "read" : "_", "to_state": "HALT", "write": ".", "action": "RIGHT"}
         ],
         "eraseone": [
-            { "read" : "=", "to_state": "eraseone", "write": ".", "action": "LEFT"},
-            { "read" : ".", "to_state": "eraseone", "write": ".", "action": "LEFT"},
             { "read" : "+", "to_state": "HALT", "write": ".", "action": "RIGHT"},
-            { "read" : "1", "to_state": "addone", "write": "+", "action": "LEFT"}
+            { "read" : "1", "to_state": "addone", "write": "+", "action": "LEFT"},
+            { "read" : "_", "to_state": "eraseone", "write": ".", "action": "LEFT"}
         ],
         "addone": [
             { "read" : "+", "to_state": "scanright" , "write": "1", "action": "RIGHT"}

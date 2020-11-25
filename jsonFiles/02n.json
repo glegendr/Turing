@@ -5,6 +5,7 @@
     "states" : [ "count_one", "count_two", "TRUE", "FALSE" ],
     "initial" : "count_one",
     "finals" : [ "TRUE", "FALSE" ],
+    "generic_variable" : "TRUE",
     "transitions" : {
         "count_one": [
             { "read" : "0", "to_state": "count_two", "write": "0", "action": "RIGHT"},

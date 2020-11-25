@@ -89,7 +89,7 @@ checkTransition _ _ _ _ [] = return ()
 checkTransition _ _ _ _ ([]:_) = myError True "Transition not well formated. Empty value"
 checkTransition (gv, gf) i alpha states (x:xs)
     | (i == 0 || (i == 3 && not gf)) && x `notElem` states = myError True $ "Unknown state \"" ++ x ++ "\""
-    | i == 3 && any (`notElem` (states ++ [[], "X", "Y", "F", "D", "RIGHT", "LEFT", "CURR"])) (splitOn "_" x) = myError True $ "Generic state \"" ++ x ++ "\" not well fromated"
+    | i == 3 && any (`notElem` (states ++ [[], "X", "Y", "F", "D", "RIGHT", "LEFT", "CURR"])) (splitOn "_" x) && gf = myError True $ "Generic state \"" ++ x ++ "\" not well fromated"
     | i `elem` [2, 4] && length x /= 1 = myError True "Multiple character in \"read\" and/or \"write\" tag"
     | i `elem` [2, 4] && (head x) `elem` "YX" && (head x) `notElem` alpha && not gf = myError True $ "\"" ++ x ++ "\" can only be used if Generic Functions are enable or if he is specified in the alphabet"
     | i `elem` [2, 4] && (head x) `notElem` (alpha ++ "YX") && not (head x == '_' && gv) =  myError True $ "\"" ++ x ++ "\" isn't in the alphabet"
@@ -159,17 +159,18 @@ splitOnOut c str = bef : splitOnOut c (safeTail aft)
 spanOut :: (Char -> Bool) -> String -> (String, String)
 spanOut _ [] = ([], [])
 spanOut f str =
-    let bef = spanOut' 0 f str
+    let bef = spanOut' False 0 f str
         aft = drop (length bef) str
     in (bef, aft)
 
-spanOut' :: Int -> (Char -> Bool) -> String -> String
-spanOut' _ _ [] = []
-spanOut' i f (x:xs)
+spanOut' :: Bool -> Int -> (Char -> Bool) -> String -> String
+spanOut' _ _ _ [] = []
+spanOut' b i f (x:xs)
     | not (f x) && i == 0 = []
-    | x `elem` "[{" = x : spanOut' (i + 1) f xs
-    | x `elem` "}]" = x : spanOut' (i - 1) f xs
-    | otherwise = x : spanOut' i f xs
+    | x == '\"' = x : spanOut' (not b) i f xs
+    | x `elem` "[{" && not b = x : spanOut' b (i + 1) f xs
+    | x `elem` "}]" && not b = x : spanOut' b (i - 1) f xs
+    | otherwise = x : spanOut' b i f xs
 
 applyTab :: (a -> IO ()) -> [a] -> IO ()
 applyTab _ [] = return ()

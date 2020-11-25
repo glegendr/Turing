@@ -5,6 +5,7 @@
     "states" : [ "init", "go_right", "go_left", "del_one", "go_for_error", "TRUE", "FALSE" ],
     "initial" : "init",
     "finals" : [ "TRUE", "FALSE" ],
+    "generic_variable" : "TRUE",
     "transitions" : {
         "init": [
             { "read" : "0", "to_state": "go_right", "write": ".", "action": "RIGHT"},

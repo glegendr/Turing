@@ -5,6 +5,7 @@
     "states" : [ "init", "ar", "ad", "br", "bd", "cr", "cd", "dr", "dd", "er", "ed", "fr", "fd", "gr", "gd", "hr", "hd", "ir", "id", "jr", "jd", "kr", "kd", "lr", "ld", "mr", "md", "nr", "nd", "or", "od", "pr", "pd", "qr", "qd", "rr", "rd", "sr", "sd", "tr", "td", "ur", "ud", "vr", "vd", "wr", "wd", "xr", "xd", "yr", "yd", "zr", "zd", "goleft", "TRUE", "FALSE" ],
     "initial" : "init",
     "finals" : [ "TRUE", "FALSE" ],
+    "generic_variable" : "TRUE",
     "transitions" : {
         "init": [
             { "read" : ".", "to_state": "TRUE", "write": "y", "action": "RIGHT"},
