@@ -120,7 +120,7 @@ makeTransition myTur@(Turing desc bef aft curState set)
     where 
         newTur = Turing desc newBef newAft newState (Set.insert newT set)
         blank = mdBlank desc
-        newT = (delLastBlank blank newBef, take (len + 2) newAft, newState)
+        newT = (take (len + 50) $ delLastBlank blank newBef, take (len + 50) newAft, newState)
         len = mdBandSize desc
         trans = mdTrasitions desc
         ret = makeTransition' bef aft curState trans (tuDesc myTur)
