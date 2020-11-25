@@ -1,0 +1,29 @@
+{
+    "name" : "generic_transitions",
+    "alphabet" : [ "0", "1", "."],
+    "blank" : ".",
+    "generic_transitions" : "TRUE",
+    "generic_variable" : "TRUE",
+    "states" : [ "READ", "end", "toEnd", "goToX", "goToX2", "replace"],
+    "initial" : "READ",
+    "finals" : [ "end" ],
+    "transitions" : {
+        "READ" : [
+            { "read" : "_", "to_state": "CURR_goToX_RIGHT_CURR_replace_._toEnd", "write": "_", "action": "RIGHT"}
+        ],
+        "goToX" : [
+            { "read" : "X", "to_state": "_goToX2_D_Y_F", "write": "_", "action": "RIGHT"},
+            { "read" : "_", "to_state": "X_goToX_D_Y_F", "write": "_", "action": "D"}
+        ],
+        "goToX2" : [
+            { "read" : "_", "to_state": "Y_F", "write": "_", "action": "LEFT"}
+        ],
+        "replace" : [
+            { "read" : "_", "to_state": "Y_F", "write": "Y", "action": "D"}
+        ],
+        "toEnd" : [
+            { "read" : ".", "to_state": "end", "write": ".", "action": "RIGHT"},
+            { "read" : "_", "to_state": "toEnd", "write": "_", "action": "RIGHT"}
+        ]
+    }
+}

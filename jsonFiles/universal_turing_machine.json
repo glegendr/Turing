@@ -1,8 +1,8 @@
 {
-    "name" : "test",
+    "name" : "Universal_Turing_Machine",
     "alphabet" : [ "1", ".", "+", "=", "g", "r", "|", ">", "R", "L", "d", "/", "i", "s"],
     "blank" : ".",
-    "generic_function" : "TRUE",
+    "generic_transitions" : "TRUE",
     "generic_variable" : "TRUE",
     "states" : [ "READ", "goto", "replace", "stop", "stop2", "HALT", "description", "description2", "input", "input2"],
     "initial" : "READ",
@@ -26,8 +26,7 @@
             { "read" : "_", "to_state": "_goto_D_Y_F", "write": "_", "action": "D"}
         ],
         "replace" : [
-            { "read" : "_", "to_state": "Y_F", "write": "Y", "action": "D"},
-            { "read" : "_", "to_state": "X_replace_D_Y_F", "write": "_", "action": "D"}
+            { "read" : "_", "to_state": "Y_F", "write": "Y", "action": "D"}
         ],
         "stop" : [
             { "read" : "Y", "to_state": "HALT", "write": "Y", "action": "RIGHT"},

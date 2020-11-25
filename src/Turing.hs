@@ -9,8 +9,7 @@ module Turing
 , newTuring
 , makeTransition
 , makeTransitionString
-, getBandString
-, turingToString) where
+, getBandString) where
 
 import RandomLib
 import Data.Char
@@ -68,9 +67,6 @@ describe (Turing md _ _ _ _) =
         transitions = "Transitions:\n" ++ (foldlV (++) $ map ((++ "\n") . transitionToString space) $ mdTrasitions md)
     in name ++ alphabet ++ blank ++ states ++ initial ++ final ++ transitions
 
-turingToString :: Turing -> String
-turingToString (Turing md b a cs _) = show md ++ show b ++ show (take 15 a) ++ show cs 
-
 directionFromString :: String -> Direction
 directionFromString s
     | newS `elem` ["right", "\"right\""] = DRight
@@ -90,7 +86,7 @@ newTransition :: State -> String -> State -> String -> String -> Transition
 newTransition cs cc ts tc d = Transition cs (head cc) ts (head tc) (directionFromString d)
 
 newMachineDescription :: String -> String -> String -> [State] -> State -> [State] -> [Transition] -> Bool -> Bool -> MachineDescription
-newMachineDescription n a b as is fs t gc gf = MachineDescription n a (head b) as is fs t (maximum ((length "Transitions:"): map length as) + 6) 0  gc gf
+newMachineDescription n a b as is fs t gc gf = MachineDescription n a (head b) as is fs t (maximum ((length "Transitions:"): map length as) + 9) 0  gc gf
 
 newTuring :: MachineDescription -> String -> Turing
 newTuring md str = Turing (md {mdBandSize = len}) [] tape state (Set.singleton ([], take (len + 2) tape, state))
@@ -186,7 +182,7 @@ applySpecialTransRight b (a:as) myX myY rest t@(Transition _ _ ts tc _)
     | tc == 'Y' = Ok (b ++ [myY], as, newTs, t {trToState = newTs})
     | otherwise = Ok (b ++ [tc], as, newTs, t {trToState = newTs})
     where
-        newTs = intercalate "_" $ replace (== "D") "RIGHT" $ replace (== "Y") [myY] $ replace (== "X") [myX] $ replace (== "F") (intercalate "_" rest) $ splitOn "_" ts
+        newTs = intercalate "_" $ replace (== "CURR") [a] $ replace (== "D") "RIGHT" $ replace (== "Y") [myY] $ replace (== "X") [myX] $ replace (== "F") (intercalate "_" rest) $ splitOn "_" ts
 
 applySpecialTransLeft b (a:as) myX myY rest t@(Transition _ _ ts tc _)
     | tc == '_' = Ok (init b, last b : a : as, newTs, t {trToState = newTs})
@@ -194,7 +190,7 @@ applySpecialTransLeft b (a:as) myX myY rest t@(Transition _ _ ts tc _)
     | tc == 'Y' = Ok (init b, last b : myY : as, newTs, t {trToState = newTs})
     | otherwise = Ok (init b, last b : tc : as, newTs, t {trToState = newTs})
     where
-        newTs = intercalate "_" $ replace (== "D") "LEFT" $ replace (== "Y") [myY] $ replace (== "X") [myX] $ replace (== "F") (intercalate "_" rest) $ splitOn "_" ts
+        newTs = intercalate "_" $ replace (== "CURR") [a] $ replace (== "D") "LEFT" $ replace (== "Y") [myY] $ replace (== "X") [myX] $ replace (== "F") (intercalate "_" rest) $ splitOn "_" ts
 
 applySpecialTrans :: String -> String -> Char -> Direction -> Char -> [String] -> Transition -> Result (String, String, State, Transition)
 applySpecialTrans [] _ _ dir _ _ t@(Transition _ _ ts tc td)

@@ -50,7 +50,7 @@ readJson path str = do
     let warningTransition = map fst $ filter ((== False) . snd) $ map (\x -> ((safeInit . safeTail) x, isGenericWellPlaced $ foldlV (++) $ map (safeInit . safeTail) $ foldlV (++) $ map (safeInit . safeInit . safeTail) $ divide 4 $ getNameValue x rawTrans)) states
     let transitions = map (map (safeInit . safeTail)) $ foldlV (++) $ map (\x -> map (x:) $ divide 4 $ getNameValue x rawTrans) states
     let genericVariable = stringToBool $ (safeInit . safeTail) $ safeHead $ getNameValue "\"generic_variable\"" myData
-    let genericFunction = stringToBool $ (safeInit . safeTail) $ safeHead $ getNameValue "\"generic_function\"" myData
+    let genericFunction = stringToBool $ (safeInit . safeTail) $ safeHead $ getNameValue "\"generic_transitions\"" myData
     applyTab (checkTransition (genericVariable, genericFunction) 0 alphabet newState) transitions
     let md = newMachineDescription machineName alphabet blank newState initial finals (map newTransitionLst transitions) genericVariable genericFunction
     let turing = newTuring md str
@@ -89,7 +89,7 @@ checkTransition _ _ _ _ [] = return ()
 checkTransition _ _ _ _ ([]:_) = myError True "Transition not well formated. Empty value"
 checkTransition (gv, gf) i alpha states (x:xs)
     | (i == 0 || (i == 3 && not gf)) && x `notElem` states = myError True $ "Unknown state \"" ++ x ++ "\""
-    | i == 3 && any (`notElem` (states ++ [[], "X", "Y", "F", "D", "RIGHT", "LEFT", "CURR"])) (splitOn "_" x) && gf = myError True $ "Generic state \"" ++ x ++ "\" not well fromated"
+    | i == 3 && any (`notElem` (states ++ [[], "X", "Y", "F", "D", "RIGHT", "LEFT", "CURR"] ++ (map (\x -> [x]) alpha))) (splitOn "_" x) && gf = myError True $ "Generic state \"" ++ x ++ "\" not well fromated"
     | i `elem` [2, 4] && length x /= 1 = myError True "Multiple character in \"read\" and/or \"write\" tag"
     | i `elem` [2, 4] && (head x) `elem` "YX" && (head x) `notElem` alpha && not gf = myError True $ "\"" ++ x ++ "\" can only be used if Generic Functions are enable or if he is specified in the alphabet"
     | i `elem` [2, 4] && (head x) `notElem` (alpha ++ "YX") && not (head x == '_' && gv) =  myError True $ "\"" ++ x ++ "\" isn't in the alphabet"
