@@ -84,7 +84,7 @@ Here are the generic transtions's variables:
 |name|Usage|description|
 |:-:|:-:|:-:|
 |X|transition call|The character that has been inserted before the transition name during the build. Can be empty (Default:`blank`)|
-|Y|transition call|The character that has been inserted before the transition name during the build. Can be empty (Default:`blank`)|
+|Y|transition call|The character that has been inserted after the transition name during the build. Can be empty (Default:`blank`)|
 |F|transition call|The rest of the transitions if you build a list of transitions|
 |D|transition call|Movement of the head for this transition. Can be empty (Default:`RIGHT`)|
 |CURR|transition build|The current character|
